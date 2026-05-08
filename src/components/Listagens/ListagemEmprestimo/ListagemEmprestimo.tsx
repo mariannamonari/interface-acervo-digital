@@ -1,63 +1,163 @@
-import { type JSX } from "react";
+import { useState, useEffect, type JSX } from "react";
+import type EmprestimoDTO from "../../../dto/EmprestimoDTO";
+import EmprestimoRequests from "../../../fetch/EmprestimoRequests";
+import { useNavigate } from "react-router-dom";
 
-interface Emprestimo {
-    id: number;
-    aluno: string;
-    livro: string;
-    dataEmprestimo: string;
-    dataDevolucao: string;
-    status: string;
-}
+function ListagemEmprestimos(): JSX.Element {
+    const [emprestimos, setEmprestimos] = useState<EmprestimoDTO[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 8;
+    const navigate = useNavigate();
 
-function ListagemEmprestimo(): JSX.Element {
-    const emprestimos: Emprestimo[] = [
-        { id: 1, aluno: 'Marianna Monari', livro: 'Dom Casmurro', dataEmprestimo: '2023-10-01', dataDevolucao: '2023-10-15', status: 'Devolvido' },
-        { id: 2, aluno: 'Isa Francis', livro: 'Memórias Póstumas de Brás Cubas', dataEmprestimo: '2023-10-05', dataDevolucao: '-', status: 'Emprestado' },
-        { id: 3, aluno: 'João Silva', livro: 'O Cortiço', dataEmprestimo: '2023-10-10', dataDevolucao: '2023-10-20', status: 'Devolvido' },
-        { id: 4, aluno: 'Ana Costa', livro: 'Iracema', dataEmprestimo: '2023-10-12', dataDevolucao: '-', status: 'Emprestado' }
-    ];
+    useEffect(() => {
+        const buscarEmprestimos = async () => {
+            try {
+                const listaDeEmprestimos = await EmprestimoRequests.obterListaDeEmprestimos();
+                setEmprestimos(listaDeEmprestimos);
+            } catch (error) {
+                console.error(`Erro ao buscar empréstimos. ${error}`);
+                alert("Erro ao criar a listagem de empréstimos.");
+            }
+        }
+
+        buscarEmprestimos();
+    }, []);
+
+    const totalPages = Math.ceil(emprestimos.length / rowsPerPage);
+    const indexOfLastRow = currentPage * rowsPerPage;
+    const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+    const currentEmprestimos = emprestimos.slice(indexOfFirstRow, indexOfLastRow);
+
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+    const formatDate = (date?: Date) => {
+        if (!date) return "-";
+        return new Date(date).toLocaleDateString('pt-BR');
+    };
 
     return (
-        <main className="p-6 bg-gray-50 min-h-screen">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">Lista de Empréstimos</h1>
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <table className="border-collapse border border-gray-300 w-full">
-                        <thead>
-                            <tr className="bg-gray-100">
-                                <th className="border border-gray-300 px-4 py-2 text-left">ID</th>
-                                <th className="border border-gray-300 px-4 py-2 text-left">Aluno</th>
-                                <th className="border border-gray-300 px-4 py-2 text-left">Livro</th>
-                                <th className="border border-gray-300 px-4 py-2 text-left">Data Empréstimo</th>
-                                <th className="border border-gray-300 px-4 py-2 text-left">Data Devolução</th>
-                                <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
-                                <th className="border border-gray-300 px-4 py-2 text-left">Ações</th>
+        <main className="bg-gray-200 flex-1 flex flex-col px-4 sm:px-6 md:px-10 py-6 md:py-10 overflow-hidden">
+            <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-4 mb-6 md:mb-8 flex-shrink-0">
+                <h1 className="flex-1 text-xl sm:text-2xl md:text-3xl text-center sm:text-left font-bold text-slate-800">Empréstimos</h1>
+                <a href="#" className="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 text-sm md:text-base bg-slate-700 rounded-md text-center text-white font-bold flex items-center justify-center hover:cursor-pointer hover:bg-slate-600 transition-all shadow-md hover:shadow-lg active:scale-95">
+                    Novo Empréstimo
+                </a>
+            </div>
+
+            <input type="text" name="busca-emprestimo" id="busca-emprestimo" placeholder="Buscar empréstimo" className="w-full max-w-6xl mx-auto p-3 md:p-2 md:mb-4 border-b-2 border-slate-700 rounded-sm" />
+
+            <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0 bg-white rounded-xl shadow-xl border border-slate-300 overflow-hidden">
+                <div className="flex-1 overflow-auto overscroll-none">
+                    <table className="table-auto w-full border-collapse text-xs sm:text-sm md:text-base">
+                        <thead className="bg-slate-700 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th className="border-b border-slate-600 text-white p-3 md:p-4 hidden md:table-cell text-left">ID</th>
+                                <th className="border-b border-slate-600 text-white p-3 md:p-4 text-left">Aluno</th>
+                                <th className="border-b border-slate-600 text-white p-3 md:p-4 text-left">Livro</th>
+                                <th className="border-b border-slate-600 text-white p-3 md:p-4 hidden sm:table-cell text-center">Retirada</th>
+                                <th className="border-b border-slate-600 text-white p-3 md:p-4 hidden lg:table-cell text-center">Devolução</th>
+                                <th className="border-b border-slate-600 text-white p-3 md:p-4 text-center">Status</th>
+                                <th className="border-b border-slate-600 text-white p-3 md:p-4 text-center">Ações</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {emprestimos.map((emprestimo, index) => (
-                                <tr key={emprestimo.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="border border-gray-300 px-4 py-2">{emprestimo.id}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{emprestimo.aluno}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{emprestimo.livro}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{emprestimo.dataEmprestimo}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{emprestimo.dataDevolucao}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{emprestimo.status}</td>
-                                    <td className="border border-gray-300 px-4 py-2">
-                                        <div className="flex gap-2">
-                                            <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-medium">Atualizar</button>
-                                            <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium">Detalhes</button>
-                                            <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium">Deletar</button>
-                                        </div>
+                        <tbody className="divide-y divide-slate-200">
+                            {currentEmprestimos && currentEmprestimos.length > 0 ? (
+                                currentEmprestimos.map((emp) => (
+                                    <tr className="text-center md:text-left transition-colors hover:bg-slate-50 group" key={emp.id_emprestimo}>
+                                        <td className="p-3 md:p-4 hidden md:table-cell text-slate-500">{emp.id_emprestimo}</td>
+                                        <td className="p-3 md:p-4 font-medium text-slate-700">{emp.aluno.nome} {emp.aluno.sobrenome}</td>
+                                        <td className="p-3 md:p-4 text-slate-700 truncate max-w-[150px] md:max-w-xs" title={emp.livro.titulo}>{emp.livro.titulo}</td>
+                                        <td className="p-3 md:p-4 hidden sm:table-cell text-center text-slate-600">{formatDate(emp.data_emprestimo)}</td>
+                                        <td className="p-3 md:p-4 hidden lg:table-cell text-center text-slate-600">{formatDate(emp.data_devolucao)}</td>
+                                        <td className="p-3 md:p-4 text-center">
+                                            <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs font-bold ${emp.status_emprestimo === "Devolvido" ? "bg-emerald-100 text-emerald-700" :
+                                                emp.status_emprestimo === "Atrasado" ? "bg-red-100 text-red-700" :
+                                                    "bg-sky-100 text-sky-700"
+                                                }`}>
+                                                {emp.status_emprestimo}
+                                            </span>
+                                        </td>
+                                        <td className="p-2 md:p-4">
+                                            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2">
+                                                <button
+                                                    onClick={() => navigate(`/detalhes/emprestimo/${emp.id_emprestimo}`)}
+                                                    className="w-full sm:w-auto bg-sky-100 text-sky-700 px-3 py-1.5 rounded-md text-xs md:text-sm font-medium hover:bg-sky-600 hover:text-white transition-all">
+                                                    Detalhes
+                                                </button>
+                                                <button className="w-full sm:w-auto bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-md text-xs md:text-sm font-medium hover:bg-emerald-600 hover:text-white transition-all">Atualizar</button>
+                                                <button className="w-full sm:w-auto bg-red-100 text-red-700 px-3 py-1.5 rounded-md text-xs md:text-sm font-medium hover:bg-red-600 hover:text-white transition-all">Deletar</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={7} className="text-center p-10 text-slate-500 italic">
+                                        Nenhum empréstimo encontrado
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 sm:px-6 flex items-center justify-between flex-shrink-0">
+                    <div className="flex-1 flex justify-between sm:hidden">
+                        <button
+                            onClick={() => paginate(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            className={`relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            Anterior
+                        </button>
+                        <button
+                            onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                            className={`ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            Próximo
+                        </button>
+                    </div>
+                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p className="text-sm text-slate-700">
+                                Mostrando <span className="font-semibold">{indexOfFirstRow + 1}</span> até <span className="font-semibold">{Math.min(indexOfLastRow, emprestimos.length)}</span> de <span className="font-semibold">{emprestimos.length}</span> resultados
+                            </p>
+                        </div>
+                        <div>
+                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <button
+                                    onClick={() => paginate(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1}
+                                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <span className="sr-only">Anterior</span>
+                                    <i className="pi pi-chevron-left"></i>
+                                </button>
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i + 1}
+                                        onClick={() => paginate(i + 1)}
+                                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === i + 1 ? 'z-10 bg-slate-700 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <span className="sr-only">Próximo</span>
+                                    <i className="pi pi-chevron-right"></i>
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     );
 }
 
-export default ListagemEmprestimo;
+export default ListagemEmprestimos;

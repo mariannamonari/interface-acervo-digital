@@ -4,20 +4,20 @@ import { Skeleton } from "primereact/skeleton";
 import { Tag } from "primereact/tag";
 import { Divider } from "primereact/divider";
 import { Message } from "primereact/message";
-import AlunoRequests from "../../../fetch/AlunoRequests";
-import type AlunoDTO from "../../../dto/AlunoDTO";
+import LivroRequests from "../../../fetch/LivroRequests";
+import type LivroDTO from "../../../dto/LivroDTO";
 import { useNavigate } from "react-router-dom";
 
-interface DetalhesLivroProps {
-    id_aluno: number;
+interface DetalhesLivrosProps {
+    id_livro: number;
 }
 
 /**
- * Componente que exibe os detalhes de um aluno.
+ * Componente que exibe os detalhes de um livro.
  * Faz a consulta à API com base no ID fornecido e monta a visualização.
  */
-function DetalhesLivro({ id_aluno }: DetalhesLivroProps): JSX.Element {
-    const [aluno, setAluno] = useState<AlunoDTO | null>(null);
+function DetalhesLivro({ id_livro }: DetalhesLivrosProps): JSX.Element {
+    const [livro, setLivro] = useState<LivroDTO | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
@@ -28,22 +28,22 @@ function DetalhesLivro({ id_aluno }: DetalhesLivroProps): JSX.Element {
             setError(null);
 
             try {
-                const dados = await AlunoRequests.obterAlunoPorId(id_aluno);
+                const dados = await LivroRequests.obterLivroPorId(id_livro);
                 if (dados) {
-                    setAluno(dados);
+                    setLivro(dados);
                 } else {
-                    setError("Aluno não encontrado.");
+                    setError("Livro não encontrado.");
                 }
             } catch (err) {
-                console.error("Erro ao carregar detalhes do aluno:", err);
-                setError("Ocorreu um erro ao buscar as informações do aluno.");
+                console.error("Erro ao carregar detalhes do livro:", err);
+                setError("Ocorreu um erro ao buscar as informações do livro.");
             } finally {
                 setLoading(false);
             }
         }
 
         buscarDados();
-    }, [id_aluno]);
+    }, [id_livro]);
 
     // Renderização do estado de carregamento (Skeleton)
     if (loading) {
@@ -72,7 +72,7 @@ function DetalhesLivro({ id_aluno }: DetalhesLivroProps): JSX.Element {
     }
 
     // Renderização do estado de erro
-    if (error || !aluno) {
+    if (error || !livro) {
         return (
             <div className="flex justify-center p-4">
                 <Message severity="error" text={error || "Erro desconhecido."} />
@@ -80,14 +80,14 @@ function DetalhesLivro({ id_aluno }: DetalhesLivroProps): JSX.Element {
         );
     }
 
-    // Renderização dos detalhes do aluno
+    // Renderização dos detalhes do livro
     return (
         <main className="bg-gray-200 flex-1 py-6 sm:py-10 px-4 overflow-y-auto">
-            <Card title={`${aluno.nome} ${aluno.sobrenome}`} className="shadow-lg animate-fade-in transition-all duration-300 w-full max-w-4xl p-4 sm:p-6 md:p-8 mx-auto font-bold text-xl">
+            <Card title={`${livro.titulo}`} className="shadow-lg animate-fade-in transition-all duration-300 w-full max-w-4xl p-4 sm:p-6 md:p-8 mx-auto font-bold text-xl">
                 <div className="flex flex-col gap-2">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                        <span className="text-gray-500 font-medium tracking-tight">Registro Acadêmico (RA)</span>
-                        <Tag value={aluno.ra} severity="info" className="px-3 py-1" />
+                        <span className="text-gray-500 font-medium tracking-tight">ISBN</span>
+                        <Tag value={livro.isbn} severity="info" className="px-3 py-1" />
                     </div>
 
                     <Divider />
@@ -96,22 +96,26 @@ function DetalhesLivro({ id_aluno }: DetalhesLivroProps): JSX.Element {
                         {/* Seção de Informações Pessoais */}
                         <div className="flex flex-col gap-4">
                             <h3 className="text-lg font-semibold text-primary-700 flex items-center gap-2">
-                                <i className="pi pi-user text-blue-500"></i> Informações Pessoais
+                                <i className="pi pi-user text-blue-500"></i> Informações Bibliográficas
                             </h3>
                             <div className="flex flex-col gap-3 ml-1 border-l-2 border-blue-50 relative pl-4">
                                 <div className="flex flex-col">
-                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Data de Nascimento</span>
-                                    <span className="text-gray-700 font-medium">{new Date(aluno.data_nascimento).toLocaleDateString('pt-BR')}</span>
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Autor</span>
+                                    <span className="text-gray-700 font-medium">{livro.autor}</span>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">E-mail Acadêmico</span>
-                                    <span className="text-gray-700 font-medium break-all">{aluno.email}</span>
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Editora</span>
+                                    <span className="text-gray-700 font-medium">{livro.editora}</span>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Status do Aluno</span>
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Ano de Publicação</span>
+                                    <span className="text-gray-700 font-medium">{livro.ano_publicacao}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Status</span>
                                     <Tag
-                                        value={aluno.status_aluno ? "Ativo" : "Inativo"}
-                                        severity={aluno.status_aluno ? "success" : "danger"}
+                                        value={livro.status_livro ? "Disponível" : "Indisponível"}
+                                        severity={livro.status_livro ? "success" : "danger"}
                                         className="w-fit mt-1 rounded-sm"
                                     />
                                 </div>
@@ -121,18 +125,25 @@ function DetalhesLivro({ id_aluno }: DetalhesLivroProps): JSX.Element {
                         {/* Seção de Contato e Localização */}
                         <div className="flex flex-col gap-4">
                             <h3 className="text-lg font-semibold text-primary-700 flex items-center gap-2">
-                                <i className="pi pi-map-marker text-orange-500"></i> Contato e Localização
+                                <i className="pi pi-map-marker text-orange-500"></i> Estoque e Aquisição
                             </h3>
                             <div className="flex flex-col gap-3 ml-1 border-l-2 border-orange-50 relative pl-4">
                                 <div className="flex flex-col">
-                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Celular / Telefone</span>
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Quantidade Total</span>
                                     <span className="text-gray-700 font-medium">
-                                        {aluno.celular ? aluno.celular : "Não informado"}
+                                        {livro.quant_total} {livro.quant_total === 1 ? "unidade" : "unidades"}
                                     </span>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Endereço Residencial</span>
-                                    <span className="text-gray-700 font-medium leading-relaxed">{aluno.endereco}</span>
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Quantidade Disponível</span>
+                                    <span className="text-gray-700 font-medium leading-relaxed">{livro.quant_disponivel} {livro.quant_disponivel === 1 ? "unidade" : "unidades"}</span>
+                                </div>
+                                 <div className="flex flex-col">
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Quantidade Aquisição</span>
+                                </div>
+                                 <div className="flex flex-col">
+                                    <span className="text-xs uppercase text-gray-400 font-bold tracking-wider">Valor da Aquisição</span>
+                                  <span className="text-gray-700 font-medium leading-relaxed">R$ {parseFloat(String(livro.valor_aquisicao || 0)).toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
@@ -152,13 +163,13 @@ function DetalhesLivro({ id_aluno }: DetalhesLivroProps): JSX.Element {
             <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8">
                 <button
                     className="w-full bg-slate-700 hover:bg-slate-500 text-white px-4 py-3 md:mb-2 rounded-md font-bold transition-all shadow-md active:scale-95"
-                    onClick={() => navigate(`/atualizar/aluno/${aluno.id_aluno}`)}
+                    onClick={() => navigate(`/atualizar/livro/${livro.id_livro}`)}
                 >
-                    Editar Aluno
+                    Editar Livro
                 </button>
                 <button
                     className="w-full bg-white text-black hover:bg-slate-500 px-4 py-3 rounded-md font-bold transition-all shadow-md active:scale-95"
-                    onClick={() => navigate(`/lista/alunos`)}
+                    onClick={() => navigate(`/lista/livros`)}
                 >
                     Voltar
                 </button>
