@@ -5,11 +5,19 @@ import Rodape from "../../../components/Rodape/Rodape";
 
 function PListagemLivro(): JSX.Element {
     return (
+<<<<<<< HEAD
         <div className="min-h-screen flex flex-col">
             <Navegacao />
             <ListagemLivros />
             <Rodape />
         </div>
+=======
+        <>
+        <Navegacao/>
+        <ListagemLivros/>
+        <Rodape/>
+        </>
+>>>>>>> features
     );
 }
 
