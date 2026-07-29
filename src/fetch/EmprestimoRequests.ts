@@ -1,11 +1,13 @@
 import type EmprestimoDTO from "../dto/EmprestimoDTO";
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://api-acervo-digital.onrender.com';
+
 class EmprestimoRequests {
     private serverURL;
     private endpointEmprestimo;
 
     constructor() {
-        this.serverURL = 'http://localhost:3333';
+        this.serverURL = API_URL;
         this.endpointEmprestimo = '/api/emprestimos';
     }
 

@@ -1,11 +1,13 @@
+
 import type LivroDTO from "../dto/LivroDTO";
+const API_URL = import.meta.env.VITE_API_URL || 'https://api-acervo-digital.onrender.com/';
 
 class LivroRequests {
     private serverUrl;
     private endpointLivro;
 
     constructor() {
-        this.serverUrl = 'http://localhost:3333';
+        this.serverUrl = API_URL;
         this.endpointLivro = '/api/livros';
     }
 
@@ -46,7 +48,7 @@ class LivroRequests {
                 const livro: LivroDTO = await respostaAPI.json();
                 return livro;
             } else {
-                throw new Error("Não foi possível buscar o livro.");
+                throw new Error(`Não foi possível buscar o livro.`);
             }
         } catch (error) {
             console.error(`Erro ao fazer a consulta de livro por ID. ${error}`);
